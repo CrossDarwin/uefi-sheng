@@ -214,6 +214,8 @@ ShengPrepareMemoryMap (IN CONST VOID *Fdt)
 
   mPreparedCount = 0;
   if (Fdt == NULL || ((UINTN)Fdt & 3) || FdtCheckHeader (Fdt) != 0) { return; }
+  UINT32 Total = FdtTotalSize (Fdt);
+  if (Total < 40 || Total > SIZE_4MB) { return; }
   Root = FdtPathOffset (Fdt, "/");
   Memory = FdtPathOffset (Fdt, "/memory");
   Res = FdtPathOffset (Fdt, "/reserved-memory");
@@ -241,10 +243,9 @@ ShengPrepareMemoryMap (IN CONST VOID *Fdt)
     if (ShengEnabled (Fdt, Node) && !ShengRanges (Fdt, Node, Reserved, &ReservedCount)) { return; }
   }
   // Preserve the FDT reservation block, including entries outside /reserved-memory.
-  UINT32 Total = FdtTotalSize (Fdt);
   UINT32 Offset = Fdt32ToCpu (ReadUnaligned32 ((CONST UINT8 *)Fdt + 16));
   BOOLEAN Terminated = FALSE;
-  if (Total < 40 || Total > SIZE_4MB || Offset < 40 || (Offset & 7)) { return; }
+  if (Offset < 40 || (Offset & 7)) { return; }
   while (Offset <= Total && Total - Offset >= 16) {
     UINT64 Base = Fdt64ToCpu (ReadUnaligned64 ((CONST UINT8 *)Fdt + Offset));
     UINT64 Size = Fdt64ToCpu (ReadUnaligned64 ((CONST UINT8 *)Fdt + Offset + 8));
@@ -343,6 +344,22 @@ ShengPrepareMemoryMap (IN CONST VOID *Fdt)
     if (!ShengAppend (ShengFreeDescriptor (), Base, End, &Count)) { return; }
   }
   mPreparedCount = Count;
+}
+
+BOOLEAN
+ShengGetPreparedMemoryMap (
+  IN CONST VOID *Fdt,
+  OUT EFI_MEMORY_REGION_DESCRIPTOR **Descriptors,
+  OUT UINT8 *Count
+  )
+{
+  *Descriptors = NULL;
+  *Count = 0;
+  ShengPrepareMemoryMap (Fdt);
+  if (mPreparedCount == 0) { return FALSE; }
+  *Descriptors = mPrepared;
+  *Count = (UINT8)mPreparedCount;
+  return TRUE;
 }
 
 VOID

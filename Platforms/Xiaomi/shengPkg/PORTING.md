@@ -51,7 +51,12 @@ parameters. UniXNU-sm8550-common supplies shared XNU platform operations.
 
 `UniXNURamDiskDxe` comes from UniXNU's shared package. It publishes the
 FDT initrd as Block I/O; DiskIoDxe and FAT expose the payload filesystem.
-`ShengBootMemoryDxe` adds DRAM within the board's mapping limits.
+`ShengBootMemoryDxe` applies the validated ABL map when the boot image
+retains an older SEC. It reserves still-free handoff pages, maps omitted
+RAM before publishing it, and reclaims unowned GCD reservations only where
+the validated map identifies free RAM. Unsupported FDT layouts leave the
+map unchanged. Template-based images must replace this DXE module as well
+as DarwinBoot; rebuilding the source FD alone does not update their SEC.
 Both modules are listed in the platform DSC and firmware volume.
 
 Build through the UniXNU resolver using [Building.md](../../../Building.md).

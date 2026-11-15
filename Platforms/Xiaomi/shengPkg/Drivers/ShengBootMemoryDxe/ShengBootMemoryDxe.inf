@@ -10,11 +10,16 @@
   ShengBootMemoryDxe.c
 
 [Packages]
+  ArmPkg/ArmPkg.dec
+  UefiCpuPkg/UefiCpuPkg.dec
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   SiliciumPkg/SiliciumPkg.dec
 
 [LibraryClasses]
+  ArmMmuLib
+  MemoryMapLib
+  UefiBootServicesTableLib
   BaseLib
   BaseMemoryLib
   DebugLib
